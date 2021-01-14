@@ -23,6 +23,9 @@ import com.android.volley.toolbox.Volley;
 
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static com.android.volley.toolbox.Volley.newRequestQueue;
 
 
@@ -34,6 +37,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         mContext = getApplicationContext();
         setContentView(R.layout.activity_main);
+
+        pieChart();
 
         View mainButton = (Button) findViewById(R.id.button);
         mainButton.setOnClickListener(v -> {
@@ -50,7 +55,19 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private void pieChart(){
+        Pie pie = AnyChart.pie();
 
+        List<DataEntry> data = new ArrayList<>();
+        data.add(new ValueDataEntry("John", 10000));
+        data.add(new ValueDataEntry("Jake", 12000));
+        data.add(new ValueDataEntry("Peter", 18000));
+
+        pie.data(data);
+
+        AnyChartView anyChartView = (AnyChartView) findViewById(R.id.meuchart);
+        anyChartView.setChart(pie);
+    }
 
 
     /**
