@@ -31,6 +31,7 @@ import static com.android.volley.toolbox.Volley.newRequestQueue;
 
 public class MainActivity extends AppCompatActivity {
     private Context mContext;
+    AnyChartView anyChartView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,33 +41,28 @@ public class MainActivity extends AppCompatActivity {
 
         pieChart();
 
-        View mainButton = (Button) findViewById(R.id.button);
-        mainButton.setOnClickListener(v -> {
-            getData();
-            consulta();
-            System.out.println("Final");
-        });
-
-
-    }
-
-    private void getData() {
-        Toast.makeText(MainActivity.this, "Botón pulsado", Toast.LENGTH_LONG).show();
 
     }
 
     private void pieChart(){
         Pie pie = AnyChart.pie();
 
-        List<DataEntry> data = new ArrayList<>();
+        List<DataEntry> data = obtenerDatos1();
+
+        pie.data(data);
+
+        anyChartView = (AnyChartView) findViewById(R.id.meuchart);
+        anyChartView.setChart(pie);
+    }
+
+    public ArrayList<DataEntry> obtenerDatos1(){
+
+        ArrayList<DataEntry> data = new ArrayList<>();
         data.add(new ValueDataEntry("John", 10000));
         data.add(new ValueDataEntry("Jake", 12000));
         data.add(new ValueDataEntry("Peter", 18000));
 
-        pie.data(data);
-
-        AnyChartView anyChartView = (AnyChartView) findViewById(R.id.meuchart);
-        anyChartView.setChart(pie);
+        return data;
     }
 
 
