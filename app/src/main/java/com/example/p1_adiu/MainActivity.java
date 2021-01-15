@@ -32,6 +32,9 @@ import static com.android.volley.toolbox.Volley.newRequestQueue;
 public class MainActivity extends AppCompatActivity {
     private Context mContext;
     AnyChartView anyChartView;
+    static ValueDataEntry dato1 = null;
+    static ValueDataEntry dato2 = null;
+    static ValueDataEntry dato3 = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
     private void pieChart(){
         Pie pie = AnyChart.pie();
 
-        List<DataEntry> data = obtenerDatos1();
+        List<DataEntry> data = obtenerDatos();
 
         pie.data(data);
 
@@ -55,7 +58,9 @@ public class MainActivity extends AppCompatActivity {
         anyChartView.setChart(pie);
     }
 
-    public ArrayList<DataEntry> obtenerDatos1(){
+    public ArrayList<DataEntry> obtenerDatos(){
+
+        consulta();
 
         ArrayList<DataEntry> data = new ArrayList<>();
         data.add(new ValueDataEntry("John", 10000));
@@ -65,37 +70,30 @@ public class MainActivity extends AppCompatActivity {
         return data;
     }
 
-
-    /**
-     * CODIGO PARA REALIZAR LA CONSULTA
-     */
-
-    // link para pruebas: https://mdn.github.io/learning-area/javascript/oojs/json/superheroes.json
-
-    String sURL="https://mdn.github.io/learning-area/javascript/oojs/json/superheroes.json";
-
     public void consulta(){
+        String sURL="http://adiu.ddns.net/PeliculasWeb20/bdpeliculas?op=cantidadporfranja&par=0-29";
+
         // Nueva petición JSONObject
         RequestQueue requestQueue = Volley.newRequestQueue(mContext);
 
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest
+        JsonObjectRequest jsonObjectRequest1 = new JsonObjectRequest
                 (Request.Method.GET, sURL, null, new Response.Listener<JSONObject>() {
 
                     @Override
                     public void onResponse(JSONObject response) {
-                        procesarRespuesta(response);
+                        int p1 = Integer.parseInt((response.toString().substring(response.toString().indexOf(":") + 1, response.toString().indexOf("}"))));
+                        System.out.println("Datos obtenidos = " + p1);
+                        dato1 = new ValueDataEntry("< 30", p1);
                     }
                 }, new Response.ErrorListener() {
 
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        // TODO: Handle error
-                        System.out.println("Error");
+                        System.err.println("Error en la consulta: " + error);
                     }
                 });
 
-        requestQueue.add(jsonObjectRequest);
-
+        requestQueue.add(jsonObjectRequest1);
     }
 
     //Método para procesar la respuesta (parsear el JSON)
