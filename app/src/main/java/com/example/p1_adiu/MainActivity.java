@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.android.volley.toolbox.StringRequest;
 import com.anychart.anychart.AnyChart;
 import com.anychart.anychart.AnyChartView;
 import com.anychart.anychart.DataEntry;
@@ -21,6 +22,8 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -32,9 +35,13 @@ import static com.android.volley.toolbox.Volley.newRequestQueue;
 public class MainActivity extends AppCompatActivity {
     private Context mContext;
     AnyChartView anyChartView;
-    static ValueDataEntry dato1 = null;
-    static ValueDataEntry dato2 = null;
-    static ValueDataEntry dato3 = null;
+
+    ArrayList<DataEntry> data = new ArrayList<>();
+    int dato1;
+    int dato2;
+    int dato3;
+    boolean datosIntroducidos = false;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,65 +49,107 @@ public class MainActivity extends AppCompatActivity {
         mContext = getApplicationContext();
         setContentView(R.layout.activity_main);
 
-        pieChart();
+        anyChartView = (AnyChartView) findViewById(R.id.meuchart);
+        anyChartView.setVisibility(View.GONE);
 
+        consultaVieja();
 
+       /** while(datosIntroducidos == false){
+            System.out.println("Hola");
+        }**/
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        anyChartView.setVisibility(View.VISIBLE);
     }
 
-    private void pieChart(){
-        Pie pie = AnyChart.pie();
+    public void pie(){
+        Pie pieChart = AnyChart.pie();
 
         List<DataEntry> data = obtenerDatos();
+        pieChart.data(data);
+        System.out.println("Data size: " + data.size());
 
-        pie.data(data);
+        anyChartView.setChart(pieChart);
 
-        anyChartView = (AnyChartView) findViewById(R.id.meuchart);
-        anyChartView.setChart(pie);
     }
 
     public ArrayList<DataEntry> obtenerDatos(){
 
-        consulta();
+        System.out.println("Dato 1: " + dato1);
+        data.add(new ValueDataEntry("<30", dato1));
 
-        ArrayList<DataEntry> data = new ArrayList<>();
-        data.add(new ValueDataEntry("John", 10000));
-        data.add(new ValueDataEntry("Jake", 12000));
-        data.add(new ValueDataEntry("Peter", 18000));
+        //data.add(new ValueDataEntry(">60", dato3));
 
         return data;
     }
 
-    public void consulta(){
-        String sURL="http://adiu.ddns.net/PeliculasWeb20/bdpeliculas?op=cantidadporfranja&par=0-29";
+    private void consulta(){
+        //creating a request queue
+        RequestQueue requestQueue = Volley.newRequestQueue(this);
 
-        // Nueva petición JSONObject
-        RequestQueue requestQueue = Volley.newRequestQueue(mContext);
+        String JSON_URL1 = "http://adiu.ddns.net/PeliculasWeb20/bdpeliculas?op=cantidadporfranja&par=0-29";
+        String JSON_URL2 = "http://adiu.ddns.net/PeliculasWeb20/bdpeliculas?op=cantidadporfranja&par=30-60";
 
-        JsonObjectRequest jsonObjectRequest1 = new JsonObjectRequest
-                (Request.Method.GET, sURL, null, new Response.Listener<JSONObject>() {
+        Consultor con = new Consultor(this, JSON_URL1, requestQueue);
+        con.start();
+    }
 
+
+    private void consultaVieja() {
+        //creating a request queue
+        RequestQueue requestQueue = Volley.newRequestQueue(this);
+
+        String JSON_URL1 = "http://adiu.ddns.net/PeliculasWeb20/bdpeliculas?op=cantidadporfranja&par=0-29";
+        String JSON_URL2 = "http://adiu.ddns.net/PeliculasWeb20/bdpeliculas?op=cantidadporfranja&par=30-60";
+
+        //creating a string request to send request to the url
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, JSON_URL1,
+                new Response.Listener<String>() {
                     @Override
-                    public void onResponse(JSONObject response) {
-                        int p1 = Integer.parseInt((response.toString().substring(response.toString().indexOf(":") + 1, response.toString().indexOf("}"))));
-                        System.out.println("Datos obtenidos = " + p1);
-                        dato1 = new ValueDataEntry("< 30", p1);
-                    }
-                }, new Response.ErrorListener() {
+                    public void onResponse(String response) {
 
+                        int p1 = Integer.parseInt((response.substring(response.indexOf(":") + 1, response.indexOf("}"))));
+                        System.out.println("Datos obtenidos (primera consulta) = " + p1);
+                        dato1 = p1;
+                        pie();
+                    }
+                },
+                new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        System.err.println("Error en la consulta: " + error);
+                        //displaying the error in toast if occurrs
+                        Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
 
-        requestQueue.add(jsonObjectRequest1);
-    }
+        //adding the string request to request queue
+        requestQueue.add(stringRequest);
 
-    //Método para procesar la respuesta (parsear el JSON)
+        /**
 
-    protected String procesarRespuesta(JSONObject jsObject) {
-        //Procesar el JSON
-        System.out.println("JSON: " + jsObject.toString());
-        return "";
+        StringRequest stringRequest2 = new StringRequest(Request.Method.GET, JSON_URL2,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        int p2 = Integer.parseInt((response.substring(response.indexOf(":") + 1, response.indexOf("}"))));
+                        System.out.println("Datos obtenidos (segunda consulta) = " + p2);
+                        dato2 = p2;
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        //displaying the error in toast if occurrs
+                        Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+        requestQueue.add(stringRequest2);
+
+        **/
     }
 }
