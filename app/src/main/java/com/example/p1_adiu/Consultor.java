@@ -10,27 +10,38 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 public class Consultor extends Thread{
-    private String JSON_URL;
+    private String JSON_URL = "http://adiu.ddns.net/PeliculasWeb20/bdpeliculas?op=cantidadporfranja&par=";
     private MainActivity main;
     RequestQueue requestQueue;
+    private String rango;
 
-    public Consultor(MainActivity main, String JSON_URL, RequestQueue requestQueue){
-        this.JSON_URL = JSON_URL;
+    public Consultor(MainActivity main, String rango, RequestQueue requestQueue){
+        this.JSON_URL = JSON_URL + rango;
+        this.rango = rango;
         this.main = main;
         this.requestQueue = requestQueue;
     }
 
     @Override
     public void run(){
-        System.out.println("Objeto consultor");
+        if(rango == "40-200"){
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+
+
         StringRequest stringRequest = new StringRequest(Request.Method.GET, JSON_URL,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
 
                         int p1 = Integer.parseInt((response.substring(response.indexOf(":") + 1, response.indexOf("}"))));
-                        System.out.println("Datos obtenidos (primera consulta) = " + p1);
-
+                        System.out.println("Datos obtenidos (consulta) = " + p1);
+                        main.pintarGrafica(p1, rango);
                     }
                 },
                 new Response.ErrorListener() {

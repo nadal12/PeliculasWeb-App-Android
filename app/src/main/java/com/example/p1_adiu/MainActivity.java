@@ -12,6 +12,7 @@ import com.android.volley.toolbox.StringRequest;
 import com.anychart.anychart.AnyChart;
 import com.anychart.anychart.AnyChartView;
 import com.anychart.anychart.DataEntry;
+import com.anychart.anychart.LegendLayout;
 import com.anychart.anychart.Pie;
 import com.anychart.anychart.ValueDataEntry;
 
@@ -28,6 +29,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 
 import static com.android.volley.toolbox.Volley.newRequestQueue;
 
@@ -37,11 +39,6 @@ public class MainActivity extends AppCompatActivity {
     AnyChartView anyChartView;
 
     ArrayList<DataEntry> data = new ArrayList<>();
-    int dato1;
-    int dato2;
-    int dato3;
-    boolean datosIntroducidos = false;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,50 +49,60 @@ public class MainActivity extends AppCompatActivity {
         anyChartView = (AnyChartView) findViewById(R.id.meuchart);
         anyChartView.setVisibility(View.GONE);
 
-        consultaVieja();
+        consulta();
 
-       /** while(datosIntroducidos == false){
-            System.out.println("Hola");
-        }**/
         try {
             Thread.sleep(5000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        
+        //anyChartView.setVisibility(View.VISIBLE);
 
-        anyChartView.setVisibility(View.VISIBLE);
     }
 
-    public void pie(){
+    public void pie(ValueDataEntry dato){
         Pie pieChart = AnyChart.pie();
+        pieChart.data(data);
+        pieChart.setTitle("Cantidad de actores por edad");
+        //pie.getLabels().setPosition("outside");
+        pieChart.getLegend().getTitle().setEnabled(true);
+        pieChart.getLegend().getTitle()
+                .setText("Rango de edades")
+                .setPadding(0d, 0d, 10d, 0d);
 
-        List<DataEntry> data = obtenerDatos();
+        data.add(dato);
+
         pieChart.data(data);
         System.out.println("Data size: " + data.size());
 
         anyChartView.setChart(pieChart);
+        anyChartView.setVisibility(View.VISIBLE);
 
     }
 
-    public ArrayList<DataEntry> obtenerDatos(){
-
-        System.out.println("Dato 1: " + dato1);
-        data.add(new ValueDataEntry("<30", dato1));
-
-        //data.add(new ValueDataEntry(">60", dato3));
-
-        return data;
+    public void pintarGrafica(int dato, String rango){
+        switch (rango){
+            case "0-40":
+                pie(new ValueDataEntry("Menores de 40 años", dato));
+                break;
+            case "40-200":
+                pie(new ValueDataEntry("Mayores de 40 años", dato));
+                break;
+        }
     }
 
     private void consulta(){
         //creating a request queue
         RequestQueue requestQueue = Volley.newRequestQueue(this);
 
-        String JSON_URL1 = "http://adiu.ddns.net/PeliculasWeb20/bdpeliculas?op=cantidadporfranja&par=0-29";
-        String JSON_URL2 = "http://adiu.ddns.net/PeliculasWeb20/bdpeliculas?op=cantidadporfranja&par=30-60";
+        String RANGO1 = "0-40";
+        String RANGO2 = "40-200";
 
-        Consultor con = new Consultor(this, JSON_URL1, requestQueue);
-        con.start();
+        Consultor con1 = new Consultor(this, RANGO1, requestQueue);
+        Consultor con2 = new Consultor(this, RANGO2, requestQueue);
+        con1.start();
+        con2.start();
     }
 
 
@@ -114,8 +121,8 @@ public class MainActivity extends AppCompatActivity {
 
                         int p1 = Integer.parseInt((response.substring(response.indexOf(":") + 1, response.indexOf("}"))));
                         System.out.println("Datos obtenidos (primera consulta) = " + p1);
-                        dato1 = p1;
-                        pie();
+                        //dato1 = p1;
+                        //pie();
                     }
                 },
                 new Response.ErrorListener() {
